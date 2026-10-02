@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: retail-store-v3-root
+  namespace: argocd
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/tcollins520/retail-store-v3-gitops.git
+    targetRevision: main
+    path: argocd/applications
+    kustomize: {}
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
