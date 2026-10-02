@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+
+metadata:
+  name: retail-store-v3-production
+  namespace: argocd
+
+spec:
+  description: Retail Store V3 Production Platform
+
+  sourceRepos:
+    - https://github.com/tcollins520/retail-store-v3-engineering.git
+    - https://github.com/tcollins520/retail-store-v3-gitops.git
+
+  destinations:
+    - namespace: default
+      server: https://kubernetes.default.svc
+
+    - namespace: observability
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
