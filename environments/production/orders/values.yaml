@@ -31,5 +31,5 @@ database:
 
 secrets:
   awsRegion: us-east-1
-  secretName: production/orders/database
+  secretName: prod/orders/database
   secretProviderClass: orders-db-secrets
