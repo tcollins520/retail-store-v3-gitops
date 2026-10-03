@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: observability
+  namespace: argocd
+
+spec:
+  project: retail-store-v3-production
+
+  source:
+    repoURL: https://github.com/tcollins520/retail-store-v3-gitops.git
+    targetRevision: main
+    path: environments/production/observability
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true

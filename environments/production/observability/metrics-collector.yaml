@@ -1,0 +1,149 @@
+# -----------------------------------------------------------------------------
+# Retail Store v2
+# OpenTelemetry Metrics Collector
+#
+# Scrapes Prometheus metrics from Kubernetes workloads and exports them to
+# Amazon Managed Prometheus (AMP).
+#
+# Runs as a Deployment since a single collector can scrape the cluster.
+# -----------------------------------------------------------------------------
+
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+
+metadata:
+  name: retail-metrics
+  namespace: observability
+
+  labels:
+    app.kubernetes.io/name: retail-metrics
+    app.kubernetes.io/component: telemetry
+    app.kubernetes.io/part-of: retail-store-v3
+    app.kubernetes.io/managed-by: argocd
+
+spec:
+  mode: deployment
+
+  replicas: 1
+
+  serviceAccount: adot-collector
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+    requests:
+      cpu: 300m
+      memory: 512Mi
+
+  config:
+
+    receivers:
+
+      prometheus:
+
+        config:
+
+          global:
+            scrape_interval: 30s
+
+          scrape_configs:
+
+            - job_name: kubernetes-pods
+
+              kubernetes_sd_configs:
+                - role: pod
+
+              relabel_configs:
+
+                - source_labels:
+                    [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                  action: keep
+                  regex: "true"
+
+                - source_labels:
+                    [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                  action: replace
+                  target_label: __metrics_path__
+
+                - source_labels:
+                    [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                  action: replace
+                  regex: ([^:]+)(?::\d+)?;(\d+)
+                  replacement: $1:$2
+                  target_label: __address__
+
+                - action: labelmap
+                  regex: __meta_kubernetes_pod_label_(.+)
+
+                - source_labels:
+                    [__meta_kubernetes_namespace]
+                  target_label: namespace
+
+                - source_labels:
+                    [__meta_kubernetes_pod_name]
+                  target_label: pod
+
+                - source_labels:
+                    [__meta_kubernetes_pod_node_name]
+                  target_label: node
+
+    processors:
+
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 512
+        spike_limit_mib: 128
+
+      k8sattributes:
+        auth_type: serviceAccount
+
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.deployment.name
+            - k8s.pod.name
+            - k8s.node.name
+
+      batch:
+        timeout: 10s
+        send_batch_size: 100
+
+    extensions:
+
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+      sigv4auth:
+        region: us-east-1
+
+    exporters:
+
+      prometheusremotewrite:
+
+        endpoint: https://aps-workspaces.us-east-1.amazonaws.com/workspaces/ws-d5e80ad2-db90-413a-915a-56c0fd6b8ce7/api/v1/remote_write
+
+        auth:
+          authenticator: sigv4auth
+
+    service:
+
+      extensions:
+        - health_check
+        - sigv4auth
+
+      pipelines:
+
+        metrics:
+
+          receivers:
+            - prometheus
+
+          processors:
+            - memory_limiter
+            - k8sattributes
+            - batch
+
+          exporters:
+            - prometheusremotewrite

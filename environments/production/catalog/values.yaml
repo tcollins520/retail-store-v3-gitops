@@ -1,0 +1,29 @@
+# ==============================================================================
+# CATALOG SERVICE
+# Production Environment Overrides
+# ==============================================================================
+
+replicaCount: 1
+
+image:
+  repository: tcollins520/retail-store-catalog
+  pullPolicy: IfNotPresent
+  tag: "1.3.0"
+
+app:
+  persistence:
+    provider: mysql
+    database: catalogdb
+
+    secret:
+      name: catalog-db
+
+database:
+  endpoint: production-catalog-mysql.cifguuuaskpf.us-east-1.rds.amazonaws.com
+  port: 3306
+  serviceName: catalog-mysql
+
+secrets:
+  awsRegion: us-east-1
+  secretName: production/catalog/database
+  secretProviderClass: catalog-db-secrets

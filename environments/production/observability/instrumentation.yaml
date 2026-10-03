@@ -1,0 +1,44 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+
+metadata:
+  name: retail-auto-instrumentation
+  namespace: observability
+
+  labels:
+    app.kubernetes.io/name: retail-auto-instrumentation
+    app.kubernetes.io/component: telemetry
+    app.kubernetes.io/part-of: retail-store-v3
+    app.kubernetes.io/managed-by: argocd
+
+spec:
+
+  exporter:
+    endpoint: http://retail-traces-collector:4318
+
+  propagators:
+    - tracecontext
+    - baggage
+
+  sampler:
+    type: always_on
+
+  env:
+
+    - name: OTEL_SDK_DISABLED
+      value: "false"
+
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: "http/protobuf"
+
+    - name: OTEL_RESOURCE_PROVIDERS_AWS_ENABLED
+      value: "true"
+
+    - name: OTEL_TRACES_EXPORTER
+      value: "otlp"
+
+    - name: OTEL_METRICS_EXPORTER
+      value: "none"
+
+    - name: OTEL_LOGS_EXPORTER
+      value: "none"
