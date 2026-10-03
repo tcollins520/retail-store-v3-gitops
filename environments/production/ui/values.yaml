@@ -8,7 +8,7 @@ replicaCount: 1
 image:
   repository: tcollins520/retail-store-ui
   pullPolicy: IfNotPresent
-  tag: "sha-fa15711-2"
+  tag: "v3-amd64"
 
 app:
   theme: default
