@@ -29,6 +29,9 @@ spec:
     namespace: default
 
   syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
 
     syncOptions:
       - CreateNamespace=true
